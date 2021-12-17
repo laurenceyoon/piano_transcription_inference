@@ -15,8 +15,6 @@ def inference(audio_path, output_midi_path, device, is_evaluate):
       cuda: bool
     """
 
-    # Arugments & parameters
-
     # Load audio
     (audio, _) = load_audio(audio_path, sr=sample_rate, mono=True)
 

@@ -1,0 +1,6 @@
+.python-version
+.vscode/
+
+*-results/
+__pycache__
+runs/

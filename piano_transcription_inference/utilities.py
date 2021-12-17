@@ -2,13 +2,41 @@ import os
 import numpy as np
 import audioread
 import librosa
+import pretty_midi
+import torch
 from mido import MidiFile
 
 from .piano_vad import (
     note_detection_with_onset_offset_regress,
     pedal_detection_with_onset_offset_regress,
 )
-from . import config
+from .config import HOP_SIZE, SAMPLE_RATE
+
+
+def load_frame_and_onset_from_midi(midi_path):
+    frames_per_sec = SAMPLE_RATE / HOP_SIZE
+
+    midi = pretty_midi.PrettyMIDI(midi_path)
+    # frame = midi.get_piano_roll(fs=frames_per_sec)
+    # onset = np.zeros_like(frame)
+    # velocity = np.zeros_like(frame)
+    for inst in midi.instruments:
+        frame = inst.get_piano_roll(fs=frames_per_sec)
+        onset = np.zeros_like(frame)
+        velocity = np.zeros_like(frame)
+        for note in inst.notes:
+            onset[note.pitch, int(note.start * frames_per_sec)] = 1
+            velocity[
+                note.pitch,
+                int(note.start * frames_per_sec) : int(note.end * frames_per_sec),
+            ] = note.velocity
+
+    frame = torch.from_numpy(frame[21 : 108 + 1].T)
+    onset = torch.from_numpy(onset[21 : 108 + 1].T)
+    velocity = torch.from_numpy(velocity[21 : 108 + 1].T)
+
+    data = {"frame": frame, "onset": onset, "velocity": velocity}
+    return data
 
 
 def create_folder(fd):
