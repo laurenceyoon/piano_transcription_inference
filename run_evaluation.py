@@ -4,38 +4,48 @@ from pathlib import Path
 from collections import defaultdict
 
 import numpy as np
-import torch
-from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from piano_transcription_inference.data_loader import (
-    PFVNMix,
-    PFVNPianoOnly,
-    RevisedPFVNMix,
-)
 from piano_transcription_inference.evaluate import evaluate
 
 
-def test_with_evaluate(dataset_path, eval_type, set_type):
+def get_track_range(group):
+    if group == "validation":
+        return range(30, 36)
+    else:
+        return range(36, 51)
+
+
+def test_with_evaluate(dataset_path: Path, transcribed_path: Path, eval_type, set_type):
     logdir = (
         Path("./runs") / f"exp_bytedance_{datetime.now().strftime('%y%m%d-%H%M%S')}"
     )
     logdir.mkdir(exist_ok=True)
-    group = [set_type]
+    track_range = get_track_range(set_type)
 
     if eval_type == "mix":
-        test_dataset = PFVNMix(path=dataset_path, groups=group)
+        track_group = sorted(
+            [
+                track / "MIDI" / "mix.mid"
+                for track in dataset_path.iterdir()
+                if int(track.name.split("Track")[1]) in track_range
+            ]
+        )
     else:
-        test_dataset = PFVNPianoOnly(path=dataset_path, groups=group)
+        track_group = sorted(
+            [
+                track / "MIDI" / "PF.mid"
+                for track in dataset_path.iterdir()
+                if int(track.name.split("Track")[1]) in track_range
+            ]
+        )
 
-    with torch.no_grad():
-        loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
-        metrics = defaultdict(list)
-        for batch in loader:
-            track = Path(batch["path"][0]).parent.name
-            batch_results = evaluate(batch, track)
-            for key, value in batch_results.items():
-                metrics[key].extend(value)
+    metrics = defaultdict(list)
+    for track in tqdm(track_group):
+        results = evaluate(track, transcribed_path)
+        for key, value in results.items():
+            metrics[key].extend(value)
+
     print("")
     for key, value in metrics.items():
         if key[-2:] == "f1" or "loss" in key:
@@ -53,12 +63,14 @@ def test_with_evaluate(dataset_path, eval_type, set_type):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset-path", required=True)
+    parser.add_argument("--transcribed-path", required=True)
     parser.add_argument("--eval-type", required=True)
     parser.add_argument("--set-type", default="test")
     args = parser.parse_args()
 
-    dataset_path = args.dataset_path
+    dataset_path = Path(args.dataset_path)
+    transcribed_path = Path(args.transcribed_path)
     eval_type = args.eval_type
     set_type = args.set_type
 
-    test_with_evaluate(dataset_path, eval_type, set_type)
+    test_with_evaluate(dataset_path, transcribed_path, eval_type, set_type)
