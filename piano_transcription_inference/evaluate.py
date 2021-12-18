@@ -36,11 +36,6 @@ def evaluate(label_track_path: Path, transcribed_path: Path):
     metrics["metric/frame/frame_recall"].append(re)
     metrics["metric/frame/frame_f1"].append(f1)
 
-    pr, re, f1 = framewise_eval(pred_onset, label_onset)
-    metrics["metric/frame/onset_precision"].append(pr)
-    metrics["metric/frame/onset_recall"].append(re)
-    metrics["metric/frame/onset_f1"].append(f1)
-
     p_est, i_est, v_est = extract_notes(pred_onset, pred_frame, pred_velocity)
     p_ref, i_ref, v_ref = extract_notes(label_onset, label_frame, label_velocity)
 
@@ -55,13 +50,11 @@ def evaluate(label_track_path: Path, transcribed_path: Path):
     metrics["metric/note/precision"].append(p)
     metrics["metric/note/recall"].append(r)
     metrics["metric/note/f1"].append(f)
-    metrics["metric/note/overlap"].append(o)
 
     p, r, f, o = evaluate_notes(i_ref, p_ref, i_est, p_est)
     metrics["metric/note-with-offsets/precision"].append(p)
     metrics["metric/note-with-offsets/recall"].append(r)
     metrics["metric/note-with-offsets/f1"].append(f)
-    metrics["metric/note-with-offsets/overlap"].append(o)
 
     p, r, f, o = transcription_velocity.precision_recall_f1_overlap(
         i_ref,
@@ -77,7 +70,6 @@ def evaluate(label_track_path: Path, transcribed_path: Path):
     metrics["metric/note-with-offsets-velocity/precision"].append(p)
     metrics["metric/note-with-offsets-velocity/recall"].append(r)
     metrics["metric/note-with-offsets-velocity/f1"].append(f)
-    metrics["metric/note-with-offsets-velocity/overlap"].append(o)
 
     return metrics
 

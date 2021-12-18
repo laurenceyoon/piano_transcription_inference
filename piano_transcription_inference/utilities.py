@@ -11,6 +11,7 @@ from .piano_vad import (
     pedal_detection_with_onset_offset_regress,
 )
 from .config import HOP_SIZE, SAMPLE_RATE
+from . import config
 
 
 def load_frame_and_onset_from_midi(midi_path):
