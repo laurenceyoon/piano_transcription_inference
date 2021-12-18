@@ -38,6 +38,30 @@ transcriptor = PianoTranscription(device='cuda', checkpoint_path=None)  # device
 transcribed_dict = transcriptor.transcribe(audio, 'cut_liszt.mid')
 ```
 
+## Transcribe multi audio files (example)
+
+```
+# ../datasets/PF-VN/
+├── Track001
+│   ├── MIDI
+│   │   ├── PF.mid
+│   │   ├── VN.mid
+│   │   └── mix.mid
+│   ├── PF.wav
+│   ├── VN.wav
+│   └── mix.wav
+├── Track002
+...
+
+python transcribe.py --source-path ../datasets/PF-VN/ --save-path ./PF-VN-validation-results --transcribe-type mix --start 30 --stop 35
+```
+
+## Run evaluation metric with transcribed MIDIs
+
+```
+python run_evaluation.py --dataset-path ../datasets/PF-VN/ --transcribed-path ./PF-VN-testset-results/ --set-type test
+```
+
 ## Visualization of piano transcription
 
 **Demo.** Lang Lang: Franz Liszt - Love Dream (Liebestraum) [[audio]](resources/cut_liszt.mp3) [[transcribed_midi]](resources/cut_liszt.mid)
